@@ -14,6 +14,9 @@ class ViewController: UIViewController {
     /// Challenge 1:
     var doneButton: UIBarButtonItem!
     
+    /// Challenge 2:
+    var password = ""
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -23,6 +26,22 @@ class ViewController: UIViewController {
         doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(saveSecretMessage))
         navigationItem.rightBarButtonItem = doneButton
         doneButton.isHidden = true
+        
+        /// Challenge 2:
+        load(key: "Password", object: &password)
+        
+        /// Challenge 2:
+        if password == "" {
+            let ac = UIAlertController(title: "Password", message: "Please set a backup password.", preferredStyle: .alert)
+            ac.addTextField()
+            ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self, weak ac] _ in
+                guard let password = ac?.textFields?[0].text else { return }
+                self?.save(password, key: "Password")
+                self?.password = password
+            })
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            present(ac, animated: true)
+        }
         
         let notificationCenter = NotificationCenter.default
         notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillHideNotification, object: nil)
@@ -43,15 +62,39 @@ class ViewController: UIViewController {
                     if success {
                         self?.unlockSecretMessage()
                     } else {
-                        let ac = UIAlertController(title: "Authentication failed", message: "You could not be verified; please try again.", preferredStyle: .alert)
-                        ac.addAction((UIAlertAction(title: "OK", style: .default)))
+                        /// Challenge 2:
+                        let ac = UIAlertController(title: "Authentication failed", message: "You could not be verified. Please use your password.", preferredStyle: .alert)
+                        ac.addTextField()
+                        ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+                            guard let passwordString = ac.textFields?[0].text else { return }
+                            if passwordString == self?.password {
+                                self?.unlockSecretMessage()
+                            } else {
+                                let ac = UIAlertController(title: "Wrong password", message: "Sorry, the secret message can not be unlocked.", preferredStyle: .alert)
+                                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                                self?.present(ac, animated: true)
+                            }
+                        })
+                        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
                         self?.present(ac, animated: true)
                     }
                 }
             }
         } else {
-            let ac = UIAlertController(title: "Biometry unavailable", message: "Your device is not configured for biometric authentication.", preferredStyle: .alert)
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            /// Challenge 2:
+            let ac = UIAlertController(title: "Biometry unavailable", message: "Your device is not configured for biometric authentication. Please use your password.", preferredStyle: .alert)
+            ac.addTextField()
+            ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+                guard let passwordString = ac.textFields?[0].text else { return }
+                if passwordString == self?.password {
+                    self?.unlockSecretMessage()
+                } else {
+                    let ac = UIAlertController(title: "Wrong password", message: "Sorry, the secret message can not be unlocked.", preferredStyle: .alert)
+                    ac.addAction(UIAlertAction(title: "OK", style: .default))
+                    self?.present(ac, animated: true)
+                }
+            })
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             self.present(ac, animated: true)
         }
     }
@@ -59,13 +102,20 @@ class ViewController: UIViewController {
     @objc func saveSecretMessage() {
         guard secret.isHidden == false else { return }
         
-        KeychainWrapper.standard.set(secret.text, forKey: "SecretMessage")
+        /// Challenge 2:
+        //KeychainWrapper.standard.set(secret.text, forKey: "SecretMessage")
+        save(secret.text, key: "SecretMessage")
         secret.resignFirstResponder()
         secret.isHidden = true
         /// Challenge 1:
         doneButton.isHidden = true
         
         title = "Nothing to see here"
+    }
+    
+    /// Challenge 2:
+    func save(_ text: String, key: String) {
+        KeychainWrapper.standard.set(text, forKey: key)
     }
     
     func unlockSecretMessage() {
@@ -76,8 +126,18 @@ class ViewController: UIViewController {
         
         /// Optional:
         //secret.text = KeychainWrapper.standard.string(forKey: "SecretMessage") ?? ""
-        if let text = KeychainWrapper.standard.string(forKey: "SecretMessage") {
+        
+        /* if let text = KeychainWrapper.standard.string(forKey: "SecretMessage") {
             secret.text = text
+        } */
+        /// Challenge 2:
+        load(key: "SecretMessage", object: &secret.text)
+    }
+    
+    /// Challenge 2:
+    func load(key: String, object: inout String) {
+        if let text = KeychainWrapper.standard.string(forKey: key) {
+            object = text
         }
     }
     
