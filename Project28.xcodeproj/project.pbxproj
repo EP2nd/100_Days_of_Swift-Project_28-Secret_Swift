@@ -66,9 +66,9 @@
 				B808DDE02913E12E00B7E96B /* SceneDelegate.swift */,
 				B808DDE22913E12E00B7E96B /* ViewController.swift */,
 				B808DDE42913E12E00B7E96B /* Main.storyboard */,
-				B808DDE72913E13000B7E96B /* Assets.xcassets */,
 				B808DDE92913E13000B7E96B /* LaunchScreen.storyboard */,
 				B808DDEC2913E13000B7E96B /* Info.plist */,
+				B808DDE72913E13000B7E96B /* Assets.xcassets */,
 			);
 			path = Project28;
 			sourceTree = "<group>";
